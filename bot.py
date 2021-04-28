@@ -81,6 +81,7 @@ def info():
 
     # TODO find the first x people who advanced y levels in each rank
     embed = discord.Embed(title='Level Event Update (bot is still under development :construction_site:)', colour=0xffa32b)
+    embed.add_field(name='Disclaimer', value='These are not the results of the April leveling event, this is a dummy event that started on Tuesday so that the bot can be tested in time for the actual May event!', inline=False)
     embed.add_field(name=':fire: Wildfire :fire:', value=get_rank_info(wildfire), inline=False)
     embed.add_field(name=':fire: Firestorm :fire:', value=get_rank_info(firestorm), inline=False)
     embed.add_field(name=':fire: Hellblaze :fire:', value=get_rank_info(hellblaze), inline=False)
