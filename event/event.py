@@ -55,10 +55,10 @@ def get_level(guild_char, world_chars):
 # This is to prevent caching issues where the someone logs off and the guild data has
 # not updated yet, so if thinks they are back to their original level when they first logged in
 def enough_time(previous_time, current_time):
-    prev = datetime.datetime.strptime(previous_time, '%Y-%m-%d %H:%M:%S')
-    curr = datetime.datetime.strptime(current_time, '%Y-%m-%d %H:%M:%S')
+    prev = datetime.strptime(previous_time, '%Y-%m-%d %H:%M:%S')
+    curr = datetime.strptime(current_time, '%Y-%m-%d %H:%M:%S')
     seconds = (curr - prev).seconds
-    print('f{seconds} seconds passed since last level')
+    print(f'{seconds} seconds passed since last level')
     return seconds > 300
 
 
