@@ -34,9 +34,13 @@ def update_files(levels):
             for level in levels:
                 previous_level = next((i for i in lines if i.split(',')[1] == level['name']), None)
                 current_level = level['level']
-                if (not previous_level) or int(previous_level.split(',')[2]) != current_level:
+                if (not previous_level) or \
+                    (int(previous_level.split(',')[2]) != current_level
+                    and enough_time(previous_level.split(',')[0], date_time)):
                     name = level['name']
-                    f.write(f'{date_time},{name},{current_level}\n')
+                    next_line = f'{date_time},{name},{current_level}'
+                    print(next_line)
+                    f.write(f'{next_line}\n')
 
 
 def get_level(guild_char, world_chars):
@@ -45,6 +49,17 @@ def get_level(guild_char, world_chars):
     world_level = [x['level'] for x in world_chars if x['name'] == guild_char['name']]
     if world_level: return world_level[0]
     else: return guild_level
+
+
+# We don't update the level if it was already updated in the last 5 minutes
+# This is to prevent caching issues where the someone logs off and the guild data has
+# not updated yet, so if thinks they are back to their original level when they first logged in
+def enough_time(previous_time, current_time):
+    prev = datetime.datetime.strptime(previous_time, '%Y-%m-%d %H:%M:%S')
+    curr = datetime.datetime.strptime(current_time, '%Y-%m-%d %H:%M:%S')
+    seconds = (curr - prev).seconds
+    print('f{seconds} seconds passed since last level')
+    return seconds > 300
 
 
 def get_data():
