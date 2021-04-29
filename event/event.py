@@ -50,16 +50,14 @@ def get_level(guild_char, world_chars):
     if world_level: return world_level[0]
     else: return guild_level
 
-
-# We don't update the level if it was already updated in the last 5 minutes
-# This is to prevent caching issues where the someone logs off and the guild data has
-# not updated yet, so if thinks they are back to their original level when they first logged in
+# so this doesn't work
+# need to somehow know how long they have been offline for before adding a guild level to the list
 def enough_time(previous_time, current_time):
     prev = datetime.strptime(previous_time, '%Y-%m-%d %H:%M:%S')
     curr = datetime.strptime(current_time, '%Y-%m-%d %H:%M:%S')
     seconds = (curr - prev).seconds
     print(f'{seconds} seconds passed since last level')
-    return seconds > 300
+    return seconds > 1
 
 
 def get_data():

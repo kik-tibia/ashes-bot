@@ -2,12 +2,19 @@
 import os
 import discord
 import pathlib
+import itertools
+import requests
+
+from datetime import datetime
 from discord.ext import commands
+from discord.ext import tasks
 from dotenv import load_dotenv
+from nested_lookup import nested_lookup
 
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+new_joiner_channel = int(os.getenv('NEW_JOINER_CHANNEL'))
 
 bot = commands.Bot(command_prefix='!')
 
@@ -77,16 +84,17 @@ def info():
         if gained != 0:
             emoji = ':star:' if gained > 0 else ':FForRespects:'
             # TODO mention if they ranked up
-            rank.append(f'**{name}** has advanced from **{start_level}** to **{end_level}**, a total of **{gained}** levels! {emoji}')
+            level_s = 'level' if gained == 1 else 'levels'
+            rank.append(f'**{name}** has advanced from **{start_level}** to **{end_level}**, a total of **{gained}** {level_s}!')
 
     # TODO find the first x people who advanced y levels in each rank
     embed = discord.Embed(title='Level Event Update (bot is still under development :construction_site:)', colour=0xffa32b)
     embed.add_field(name='Disclaimer', value='These are not the results of the April leveling event, this is a dummy event that started on Tuesday so that the bot can be tested in time for the actual May event!', inline=False)
-    embed.add_field(name=':fire: Wildfire :fire:', value=get_rank_info(wildfire), inline=False)
-    embed.add_field(name=':fire: Firestorm :fire:', value=get_rank_info(firestorm), inline=False)
-    embed.add_field(name=':fire: Hellblaze :fire:', value=get_rank_info(hellblaze), inline=False)
-    embed.add_field(name=':fire: Phoenix :fire:', value=get_rank_info(phoenix), inline=False)
-    embed.add_field(name=':fire: Hellbringer :fire:', value=get_rank_info(hellbringer), inline=False)
+    embed.add_field(name=':fire: Wildfire :fire: - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire), inline=False)
+    embed.add_field(name=':fire: Firestorm :fire: - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm), inline=False)
+    embed.add_field(name=':fire: Hellblaze :fire: - Two 2.5kk prizes for the first two people to level up 25 times', value=get_rank_info(hellblaze), inline=False)
+    embed.add_field(name=':fire: Phoenix :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(phoenix), inline=False)
+    embed.add_field(name=':fire: Hellbringer :fire: - do these guys get any prizes?', value=get_rank_info(hellbringer), inline=False)
 
     return embed
 
@@ -105,6 +113,58 @@ def new_event():
     else: next_id = max(ids) + 1
     open(pathlib.Path(script_path) / 'event' / f'{next_id}.dat', 'a').close()
     return discord.Embed(title='New event started', colour=0xffa32b, description=f'Started a new event with id {next_id}')
+
+
+@tasks.loop(seconds=60)
+async def new_joiner_loop():
+    await bot.wait_until_ready()
+
+    data = get_data()
+    response = update_files(data)
+
+    channel = bot.get_channel(new_joiner_channel)
+    if response:
+        await channel.send(embed=response)
+
+
+def update_files(guild_chars):
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    guild_file = pathlib.Path(script_path) / 'guild-members.dat'
+
+    with open(guild_file) as f:
+        original_guild_names = set(f.read().splitlines())
+    guild_char_names = set(map(lambda x: x['name'], guild_chars))
+    new_members = guild_char_names - original_guild_names
+
+    if new_members:
+        with guild_file.open('a') as f:
+            f.write('\n'.join(list(new_members)) + '\n')
+
+    messages = []
+    for member in new_members:
+        details = next(i for i in guild_chars if i['name'] == member)
+        name = details['name']
+        voc = details['vocation']
+        lvl = details['level']
+        messages.append(f'**{name}** ({lvl} {voc}) just joined the guild!')
+    if messages:
+        return discord.Embed(title='New members', colour=0xffa32b, description='\n'.join(messages))
+    else: return None
+
+
+def get_data():
+    guild_url = 'https://api.tibiadata.com/v2/guild/Ashes+Remain.json'
+
+    guild_json = requests.get(guild_url).json()
+
+    guild_members = guild_json['guild']['members'][2:]
+    guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
+
+    return guild_chars
+
+@bot.event
+async def on_ready():
+    new_joiner_loop.start()
 
 
 bot.run(TOKEN)
