@@ -67,8 +67,7 @@ def get_data():
     world_json = requests.get(world_url).json()
     guild_json = requests.get(guild_url).json()
 
-    # TODO exclude low rank members and leader alts
-    guild_members = guild_json['guild']['members'][2:]
+    guild_members = guild_json['guild']['members'][:-1]
     guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
     world_chars = world_json['world'].get('players_online', [])
 
