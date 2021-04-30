@@ -15,13 +15,9 @@ from nested_lookup import nested_lookup
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 new_joiner_channel = int(os.getenv('NEW_JOINER_CHANNEL'))
+script_path = os.path.dirname(os.path.realpath(__file__))
 
 bot = commands.Bot(command_prefix='!')
-
-
-@bot.event
-async def on_ready():
-    print(f'${bot.user} has connected')
 
 
 @bot.command(name='event', help='info: Provides an update on the level event.\nnew: Starts a new level event.')
@@ -43,9 +39,9 @@ async def event(ctx, arg=None):
 
 
 def info():
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    # TODO customizable event file instead of hardcoded 1.dat
-    dat_file = pathlib.Path(script_path) / 'event' / '1.dat'
+    ids = [int(x.stem) for x in list((pathlib.Path(script_path) / 'event').glob('*.dat'))]
+    latest = max(ids)
+    dat_file = pathlib.Path(script_path) / 'event' / f'{latest}.dat'
 
     with open(dat_file) as f:
         levels = f.read().splitlines()
@@ -82,10 +78,10 @@ def info():
         else: rank = hellbringer
 
         if gained != 0:
-            emoji = ':star:' if gained > 0 else ':FForRespects:'
+            emoji = '' if gained > 0 else ''
             # TODO mention if they ranked up
             level_s = 'level' if gained == 1 else 'levels'
-            rank.append(f'**{name}** has advanced from **{start_level}** to **{end_level}**, a total of **{gained}** {level_s}!')
+            rank.append(f'**{name}** gained **{gained}** {level_s}! ({start_level} to {end_level}){emoji}')
 
     # TODO find the first x people who advanced y levels in each rank
     embed = discord.Embed(title='Level Event Update (bot is still under development :construction_site:)', colour=0xffa32b)
@@ -94,20 +90,30 @@ def info():
     embed.add_field(name=':fire: Firestorm :fire: - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm), inline=False)
     embed.add_field(name=':fire: Hellblaze :fire: - Two 2.5kk prizes for the first two people to level up 25 times', value=get_rank_info(hellblaze), inline=False)
     embed.add_field(name=':fire: Phoenix :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(phoenix), inline=False)
-    embed.add_field(name=':fire: Hellbringer :fire: - do these guys get any prizes?', value=get_rank_info(hellbringer), inline=False)
+    embed.add_field(name=':fire: Hellbringer :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(hellbringer), inline=False)
+
+    lens = [len(f.value) for f in embed.fields]
+    if any([s > 900 for s in lens]):
+        max_len = max(lens)
+        embed.add_field(name='Warning', value=f'Almost reached the discord field size limit ({max_len}/1024)', inline=False)
+    if any([s > 1023 for s in lens]):
+        embed.clear_fields()
+        embed.description = "Can't send message because it's too long, please tell Kikaro to fix his crappy code."
+
 
     return embed
+    # return discord.Embed(title=':construction: Bot temporarily down for renovations :construction:', description='Turns out there is a 1024 character limit for each field, bot will be out of action until I have time to fix it', colour=0xffa32b)
 
 
 def get_rank_info(rank):
     if rank:
-        return '\n'.join(rank)
+        rank_info = '\n'.join(rank)
+        return rank_info
     else:
         return 'Nobody has gained any levels yet...'
 
 
 def new_event():
-    script_path = os.path.dirname(os.path.realpath(__file__))
     ids = [int(x.stem) for x in list((pathlib.Path(script_path) / 'event').glob('*.dat'))]
     if not ids: next_id = 1
     else: next_id = max(ids) + 1
@@ -128,7 +134,6 @@ async def new_joiner_loop():
 
 
 def update_files(guild_chars):
-    script_path = os.path.dirname(os.path.realpath(__file__))
     guild_file = pathlib.Path(script_path) / 'guild-members.dat'
 
     with open(guild_file) as f:
@@ -164,6 +169,7 @@ def get_data():
 
 @bot.event
 async def on_ready():
+    print(f'${bot.user} has connected')
     new_joiner_loop.start()
 
 
