@@ -84,8 +84,9 @@ def info():
             rank.append(f'**{name}** gained **{gained}** {level_s}! ({start_level} to {end_level}){emoji}')
 
     # TODO find the first x people who advanced y levels in each rank
-    embed = discord.Embed(title='Level Event Update (bot is still under development :construction_site:)', colour=0xffa32b)
-    embed.add_field(name='Disclaimer', value='These are not the results of the April leveling event, this is a dummy event that started on Tuesday so that the bot can be tested in time for the actual May event!', inline=False)
+    embed = discord.Embed(title='Level Event Update', colour=0xffa32b)
+    if latest == 2:
+        embed.add_field(name='Disclaimer', value='These are not the results of the April leveling event, this is a dummy event that started on Tuesday so that the bot can be tested in time for the actual May event!', inline=False)
     embed.add_field(name=':fire: Wildfire :fire: - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire), inline=False)
     embed.add_field(name=':fire: Firestorm :fire: - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm), inline=False)
     embed.add_field(name=':fire: Hellblaze :fire: - Two 2.5kk prizes for the first two people to level up 25 times', value=get_rank_info(hellblaze), inline=False)
@@ -100,9 +101,7 @@ def info():
         embed.clear_fields()
         embed.description = "Can't send message because it's too long, please tell Kikaro to fix his crappy code."
 
-
     return embed
-    # return discord.Embed(title=':construction: Bot temporarily down for renovations :construction:', description='Turns out there is a 1024 character limit for each field, bot will be out of action until I have time to fix it', colour=0xffa32b)
 
 
 def get_rank_info(rank):
