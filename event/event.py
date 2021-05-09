@@ -67,8 +67,11 @@ def get_data():
     world_json = requests.get(world_url).json()
     guild_json = requests.get(guild_url).json()
 
-    guild_members = guild_json['guild']['members'][:-1]
-    guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
+    try:
+        guild_members = guild_json['guild']['members'][:-1]
+        guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
+    except:
+        guild_chars = []
     world_chars = world_json['world'].get('players_online', [])
 
     return(guild_chars, world_chars)

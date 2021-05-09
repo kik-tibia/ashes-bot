@@ -83,12 +83,19 @@ def info():
             level_s = 'level' if gained == 1 else 'levels'
             rank.append(f'**{name}** gained **{gained}** {level_s}! ({start_level} to {end_level}){emoji}')
 
+    # Temporary hack to get around discord size limit
+    wildfire1, wildfire2 = split_list(wildfire)
+    firestorm1, firestorm2 = split_list(firestorm)
+
+
     # TODO find the first x people who advanced y levels in each rank
     embed = discord.Embed(title='Level Event Update', colour=0xffa32b)
     if latest == 2:
         embed.add_field(name='Disclaimer', value='These are not the results of the April leveling event, this is a dummy event that started on Tuesday so that the bot can be tested in time for the actual May event!', inline=False)
-    embed.add_field(name=':fire: Wildfire :fire: - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire), inline=False)
-    embed.add_field(name=':fire: Firestorm :fire: - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm), inline=False)
+    embed.add_field(name=':fire: Wildfire :fire: (1/2) - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire1), inline=False)
+    embed.add_field(name=':fire: Wildfire :fire: (2/2) - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire2), inline=False)
+    embed.add_field(name=':fire: Firestorm :fire: (1/2) - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm1), inline=False)
+    embed.add_field(name=':fire: Firestorm :fire: (2/2) - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm2), inline=False)
     embed.add_field(name=':fire: Hellblaze :fire: - Two 2.5kk prizes for the first two people to level up 25 times', value=get_rank_info(hellblaze), inline=False)
     embed.add_field(name=':fire: Phoenix :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(phoenix), inline=False)
     embed.add_field(name=':fire: Hellbringer :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(hellbringer), inline=False)
@@ -102,6 +109,11 @@ def info():
         embed.description = "Can't send message because it's too long, please tell Kikaro to fix his crappy code."
 
     return embed
+
+
+def split_list(a_list):
+    half = len(a_list)//2
+    return a_list[:half], a_list[half:]
 
 
 def get_rank_info(rank):
@@ -161,8 +173,11 @@ def get_data():
 
     guild_json = requests.get(guild_url).json()
 
-    guild_members = guild_json['guild']['members'][2:]
-    guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
+    try:
+        guild_members = guild_json['guild']['members'][2:]
+        guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
+    except:
+        guild_chars = []
 
     return guild_chars
 
