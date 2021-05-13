@@ -68,7 +68,7 @@ def get_data():
     guild_json = requests.get(guild_url).json()
 
     try:
-        guild_members = guild_json['guild']['members'][:-1]
+        guild_members = guild_json['guild']['members'][:-2]
         guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
     except:
         guild_chars = []

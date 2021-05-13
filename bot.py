@@ -84,24 +84,27 @@ def info():
             rank.append(f'**{name}** gained **{gained}** {level_s}! ({start_level} to {end_level}){emoji}')
 
     # Temporary hack to get around discord size limit
-    wildfire1, wildfire2 = split_list(wildfire)
-    firestorm1, firestorm2 = split_list(firestorm)
+    # wildfire1, wildfire2 = split_list(wildfire)
+    # firestorm1, firestorm2 = split_list(firestorm)
 
 
     # TODO find the first x people who advanced y levels in each rank
     embed = discord.Embed(title='Level Event Update', colour=0xffa32b)
     if latest == 2:
         embed.add_field(name='Disclaimer', value='These are not the results of the April leveling event, this is a dummy event that started on Tuesday so that the bot can be tested in time for the actual May event!', inline=False)
-    embed.add_field(name=':fire: Wildfire :fire: (1/2) - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire1), inline=False)
-    embed.add_field(name=':fire: Wildfire :fire: (2/2) - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire2), inline=False)
-    embed.add_field(name=':fire: Firestorm :fire: (1/2) - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm1), inline=False)
-    embed.add_field(name=':fire: Firestorm :fire: (2/2) - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm2), inline=False)
+    # embed.add_field(name=':fire: Wildfire :fire: (1/2) - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire1), inline=False)
+    # embed.add_field(name=':fire: Wildfire :fire: (2/2) - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire2), inline=False)
+    # embed.add_field(name=':fire: Firestorm :fire: (1/2) - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm1), inline=False)
+    # embed.add_field(name=':fire: Firestorm :fire: (2/2) - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm2), inline=False)
+    embed.add_field(name=':fire: Wildfire :fire: - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire), inline=False)
+    embed.add_field(name=':fire: Firestorm :fire: - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm), inline=False)
     embed.add_field(name=':fire: Hellblaze :fire: - Two 2.5kk prizes for the first two people to level up 25 times', value=get_rank_info(hellblaze), inline=False)
     embed.add_field(name=':fire: Phoenix :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(phoenix), inline=False)
     embed.add_field(name=':fire: Hellbringer :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(hellbringer), inline=False)
 
     lens = [len(f.value) for f in embed.fields]
-    if any([s > 900 for s in lens]):
+    print(lens)
+    if any([s > 850 for s in lens]):
         max_len = max(lens)
         embed.add_field(name='Warning', value=f'Almost reached the discord field size limit ({max_len}/1024)', inline=False)
     if any([s > 1023 for s in lens]):
@@ -136,40 +139,58 @@ def new_event():
 async def new_joiner_loop():
     await bot.wait_until_ready()
 
-    data = get_data()
-    response = update_files(data)
+    remain_data = get_data('Ashes+Remain')
+    recharge_data = get_data('Ashes+Recharge')
+    response = update_files_and_get_new_joiner_message(remain_data, recharge_data)
 
     channel = bot.get_channel(new_joiner_channel)
     if response:
         await channel.send(embed=response)
 
 
-def update_files(guild_chars):
-    guild_file = pathlib.Path(script_path) / 'guild-members.dat'
+def update_files_and_get_new_joiner_message(remain_guild_chars, recharge_guild_chars):
+    remain_guild_file = pathlib.Path(script_path) / 'remain-guild-members.dat'
+    recharge_guild_file = pathlib.Path(script_path) / 'recharge-guild-members.dat'
 
+    remain_new_members = get_new_members_and_update_file(remain_guild_file, remain_guild_chars)
+    recharge_new_members = get_new_members_and_update_file(recharge_guild_file, recharge_guild_chars)
+
+    messages = []
+    for member in remain_new_members:
+        messages.append(new_joiner_message(member, remain_guild_chars, 'Ashes Remain'))
+
+    for member in recharge_new_members:
+        messages.append(new_joiner_message(member, recharge_guild_chars, 'Ashes Recharge'))
+
+    if messages:
+        return discord.Embed(title='New members', colour=0xffa32b, description='\n'.join(messages))
+    else: return None
+
+
+def new_joiner_message(member, guild_chars, guild_name):
+    details = next(i for i in guild_chars if i['name'] == member)
+    name = details['name']
+    voc = details['vocation']
+    lvl = details['level']
+    return f'**{name}** ({lvl} {voc}) just joined {guild_name}!'
+
+
+def get_new_members_and_update_file(guild_file, guild_chars):
     with open(guild_file) as f:
         original_guild_names = set(f.read().splitlines())
     guild_char_names = set(map(lambda x: x['name'], guild_chars))
+
     new_members = guild_char_names - original_guild_names
 
     if new_members:
         with guild_file.open('a') as f:
             f.write('\n'.join(list(new_members)) + '\n')
 
-    messages = []
-    for member in new_members:
-        details = next(i for i in guild_chars if i['name'] == member)
-        name = details['name']
-        voc = details['vocation']
-        lvl = details['level']
-        messages.append(f'**{name}** ({lvl} {voc}) just joined the guild!')
-    if messages:
-        return discord.Embed(title='New members', colour=0xffa32b, description='\n'.join(messages))
-    else: return None
+    return new_members
 
 
-def get_data():
-    guild_url = 'https://api.tibiadata.com/v2/guild/Ashes+Remain.json'
+def get_data(guild_name):
+    guild_url = f'https://api.tibiadata.com/v2/guild/{guild_name}.json'
 
     guild_json = requests.get(guild_url).json()
 
@@ -180,6 +201,7 @@ def get_data():
         guild_chars = []
 
     return guild_chars
+
 
 @bot.event
 async def on_ready():
