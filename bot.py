@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+import asyncio
 import os
+import sys
 import discord
 import pathlib
 import itertools
@@ -21,12 +23,19 @@ bot = commands.Bot(command_prefix='!')
 
 
 @bot.command(name='event', help='info: Provides an update on the level event.\nnew: Starts a new level event.')
-async def event(ctx, arg=None):
+async def event(ctx, *args):
     response = None
 
-    if arg == 'info':
-        response = info()
-    elif arg == 'new':
+    arg1 = args[0]
+    if arg1 == 'info':
+        if len(args) > 1: event_id = args[1]
+        else: event_id = None
+        response = info(event_id)
+    elif arg1 == 'rankups':
+        if len(args) > 1: event_id = args[1]
+        else: event_id = None
+        response = rank_ups(event_id)
+    elif arg1 == 'new':
         if 'Moderator' in [y.name for y in ctx.message.author.roles]:
             response = new_event()
         else:
@@ -35,31 +44,14 @@ async def event(ctx, arg=None):
     if response:
         await ctx.send(embed=response)
     else:
-        await ctx.send(f'Unknown argument **{arg}** to event command')
+        await ctx.send(f'Unknown argument **{arg1}** to event command')
 
 
-def info():
-    ids = [int(x.stem) for x in list((pathlib.Path(script_path) / 'event').glob('*.dat'))]
-    latest = max(ids)
-    dat_file = pathlib.Path(script_path) / 'event' / f'{latest}.dat'
+def info(event_id=None):
+    char_data = get_char_data(event_id)
 
-    with open(dat_file) as f:
-        levels = f.read().splitlines()
-    rev_levels = levels.copy()
-    rev_levels.reverse()
-
-    chars = set(map(lambda x: x.split(',')[1], levels))
-
-    char_data = []
-
-    for char in chars:
-        start_level_data = next(i for i in levels if i.split(',')[1] == char)
-        end_level_data = next(i for i in rev_levels if i.split(',')[1] == char)
-        start_level = int(start_level_data.split(',')[2])
-        end_level = int(end_level_data.split(',')[2])
-        char_data.append({'name': char, 'start_level': start_level, 'end_level': end_level})
-
-    sorted_char_data = sorted(char_data, key=lambda x: x['start_level'])
+    sorted_char_data = sorted(char_data, key=lambda x: x['end_level'] - x['start_level'])
+    sorted_char_data.reverse()
 
     wildfire = []
     firestorm = []
@@ -81,21 +73,9 @@ def info():
             emoji = '' if gained > 0 else ''
             # TODO mention if they ranked up
             level_s = 'level' if gained == 1 else 'levels'
-            rank.append(f'**{name}** gained **{gained}** {level_s}! ({start_level} to {end_level}){emoji}')
+            rank.append(f'**{name}**: {gained} {level_s} ({start_level} to {end_level}) {emoji}')
 
-    # Temporary hack to get around discord size limit
-    # wildfire1, wildfire2 = split_list(wildfire)
-    # firestorm1, firestorm2 = split_list(firestorm)
-
-
-    # TODO find the first x people who advanced y levels in each rank
     embed = discord.Embed(title='Level Event Update', colour=0xffa32b)
-    if latest == 2:
-        embed.add_field(name='Disclaimer', value='These are not the results of the April leveling event, this is a dummy event that started on Tuesday so that the bot can be tested in time for the actual May event!', inline=False)
-    # embed.add_field(name=':fire: Wildfire :fire: (1/2) - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire1), inline=False)
-    # embed.add_field(name=':fire: Wildfire :fire: (2/2) - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire2), inline=False)
-    # embed.add_field(name=':fire: Firestorm :fire: (1/2) - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm1), inline=False)
-    # embed.add_field(name=':fire: Firestorm :fire: (2/2) - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm2), inline=False)
     embed.add_field(name=':fire: Wildfire :fire: - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire), inline=False)
     embed.add_field(name=':fire: Firestorm :fire: - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm), inline=False)
     embed.add_field(name=':fire: Hellblaze :fire: - Two 2.5kk prizes for the first two people to level up 25 times', value=get_rank_info(hellblaze), inline=False)
@@ -114,17 +94,63 @@ def info():
     return embed
 
 
-def split_list(a_list):
-    half = len(a_list)//2
-    return a_list[:half], a_list[half:]
+def get_char_data(event_id=None):
+    if not event_id:
+        ids = [int(x.stem) for x in list((pathlib.Path(script_path) / 'event').glob('*.dat'))]
+        event_id = max(ids)
+    dat_file = pathlib.Path(script_path) / 'event' / f'{event_id}.dat.end'
+    if not dat_file.exists():
+        dat_file = pathlib.Path(script_path) / 'event' / f'{event_id}.dat'
+
+    with open(dat_file) as f:
+        levels = f.read().splitlines()
+    rev_levels = levels.copy()
+    rev_levels.reverse()
+
+    chars = set(map(lambda x: x.split(',')[1], levels))
+
+    char_data = []
+
+    for char in chars:
+        start_level_data = next(i for i in levels if i.split(',')[1] == char)
+        end_level_data = next(i for i in rev_levels if i.split(',')[1] == char)
+        start_level = int(start_level_data.split(',')[2])
+        end_level = int(end_level_data.split(',')[2])
+        char_data.append({'name': char, 'start_level': start_level, 'end_level': end_level})
+
+    return char_data
 
 
 def get_rank_info(rank):
     if rank:
-        rank_info = '\n'.join(rank)
+        rank_info = '\n'.join(rank[:10])
         return rank_info
     else:
-        return 'Nobody has gained any levels yet...'
+        return 'Nobody has gained any levels yet.'
+
+
+def rank_ups(event_id=None):
+    char_data = get_char_data(event_id)
+
+    sorted_char_data = sorted(char_data, key=lambda x: x['end_level'] - x['start_level'])
+    sorted_char_data.reverse()
+
+    rank_up_chars = []
+    for char in sorted_char_data:
+        name = char['name']
+        start_level = char['start_level']
+        end_level = char['end_level']
+        if start_level // 100 != end_level // 100 and start_level < 500:
+            rank_up_chars.append(f'**{name}**: {start_level} to {end_level}')
+
+    if rank_up_chars:
+        rank_up_message = '\n'.join(rank_up_chars)
+    else:
+        rank_up_message = 'Nobody has ranked up yet.'
+
+    embed = discord.Embed(title='Level Event Rank Ups', colour=0xffa32b)
+    embed.add_field(name='Rank ups:', value=rank_up_message, inline=False)
+    return embed
 
 
 def new_event():
@@ -135,14 +161,24 @@ def new_event():
     return discord.Embed(title='New event started', colour=0xffa32b, description=f'Started a new event with id {next_id}')
 
 
-@tasks.loop(seconds=60)
+@tasks.loop(seconds=120)
 async def new_joiner_loop():
+    start_time = datetime.now().strftime('%H:%M:%S')
     await bot.wait_until_ready()
+    ready_time = datetime.now().strftime('%H:%M:%S')
 
-    remain_data = get_data('Ashes+Remain')
-    recharge_data = get_data('Ashes+Recharge')
+    # TODO this is not async, need to use grequests or something probably
+    t1 = asyncio.create_task(get_data('Ashes+Remain'))
+    t2 = asyncio.create_task(get_data('Ashes+Recharge'))
+    remain_data = await t1
+    recharge_data = await t2
+
+    data_time = datetime.now().strftime('%H:%M:%S')
+
     response = update_files_and_get_new_joiner_message(remain_data, recharge_data)
 
+    end_time = datetime.now().strftime('%H:%M:%S')
+    print(f'{start_time} -> {ready_time} -> {data_time} -> {end_time}')
     channel = bot.get_channel(new_joiner_channel)
     if response:
         await channel.send(embed=response)
@@ -189,7 +225,7 @@ def get_new_members_and_update_file(guild_file, guild_chars):
     return new_members
 
 
-def get_data(guild_name):
+async def get_data(guild_name):
     guild_url = f'https://api.tibiadata.com/v2/guild/{guild_name}.json'
 
     guild_json = requests.get(guild_url).json()
@@ -206,7 +242,22 @@ def get_data(guild_name):
 @bot.event
 async def on_ready():
     print(f'${bot.user} has connected')
-    new_joiner_loop.start()
+    try:
+        pass
+        new_joiner_loop.start()
+    except Exception as e:
+        print(e)
+        restart_program()
+
+
+def restart_program():
+    python = sys.executable
+
+    sys.stdout.flush()
+
+    args = [sys.argv[0]]
+    print('Restart command recieved')
+    os.execl(python, python, * args)
 
 
 bot.run(TOKEN)
