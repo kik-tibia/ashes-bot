@@ -22,6 +22,17 @@ script_path = os.path.dirname(os.path.realpath(__file__))
 bot = commands.Bot(command_prefix='!')
 
 
+@bot.command(name='activity', help='List of active participants in the public-chat channel')
+async def activity(ctx, *args):
+    if 'Moderator' in [y.name for y in ctx.message.author.roles]:
+        response = 'Test'
+    else:
+        response = 'You need the Moderator role to run this command'
+
+
+    await ctx.send(response)
+
+
 @bot.command(name='event', help='info: Provides an update on the level event.\nnew: Starts a new level event.')
 async def event(ctx, *args):
     response = None
@@ -121,12 +132,58 @@ def get_char_data(event_id=None):
     return char_data
 
 
+def get_level_data(event_id=None):
+    if not event_id:
+        ids = [int(x.stem) for x in list((pathlib.Path(script_path) / 'event').glob('*.dat'))]
+        event_id = max(ids)
+    dat_file = pathlib.Path(script_path) / 'event' / f'{event_id}.dat.end'
+    if not dat_file.exists():
+        dat_file = pathlib.Path(script_path) / 'event' / f'{event_id}.dat'
+
+    with open(dat_file) as f:
+        levels = f.read().splitlines()
+
+    level_data = []
+
+    for level in levels:
+        d = datetime.strptime(level.split(',')[0], '%Y-%m-%d %H:%M:%S')
+        name = level.split(',')[1]
+        lvl = level.split(',')[2]
+        level_data.append({'date': d, 'name': name, 'level': lvl})
+
+    return level_data
+
+
 def get_rank_info(rank):
     if rank:
         rank_info = '\n'.join(rank[:10])
         return rank_info
     else:
         return 'Nobody has gained any levels yet.'
+
+
+def winners(event_id=None):
+    level_data = get_level_data(event_id)
+
+    wildfire = []
+    firestorm = []
+    hellblaze = []
+    phoenix = []
+    hellbringer = []
+    for char in sorted_char_data:
+        name = char['name']
+        start_level = char['start_level']
+        end_level = char['end_level']
+        gained = end_level - start_level
+        if start_level < 300: rank = wildfire
+        elif start_level < 400: rank = firestorm
+        elif start_level < 500: rank = hellblaze
+        elif start_level < 700: rank = phoenix
+        else: rank = hellbringer
+
+
+def rank_winners(level_data, start_level, end_level, levels_needed):
+    pass
 
 
 def rank_ups(event_id=None):
@@ -228,9 +285,8 @@ def get_new_members_and_update_file(guild_file, guild_chars):
 async def get_data(guild_name):
     guild_url = f'https://api.tibiadata.com/v2/guild/{guild_name}.json'
 
-    guild_json = requests.get(guild_url).json()
-
     try:
+        guild_json = requests.get(guild_url).json()
         guild_members = guild_json['guild']['members'][2:]
         guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
     except:
