@@ -17,6 +17,8 @@ from nested_lookup import nested_lookup
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 new_joiner_channel = int(os.getenv('NEW_JOINER_CHANNEL'))
+activity_channel = int(os.getenv('ACTIVITY_CHANNEL'))
+
 script_path = os.path.dirname(os.path.realpath(__file__))
 
 bot = commands.Bot(command_prefix='!')
@@ -64,21 +66,23 @@ def info(event_id=None):
     sorted_char_data = sorted(char_data, key=lambda x: x['end_level'] - x['start_level'])
     sorted_char_data.reverse()
 
+    spark = []
     wildfire = []
     firestorm = []
     hellblaze = []
-    phoenix = []
     hellbringer = []
+    phoenix = []
     for char in sorted_char_data:
         name = char['name']
         start_level = char['start_level']
         end_level = char['end_level']
         gained = end_level - start_level
-        if start_level < 300: rank = wildfire
-        elif start_level < 400: rank = firestorm
-        elif start_level < 500: rank = hellblaze
-        elif start_level < 700: rank = phoenix
-        else: rank = hellbringer
+        if start_level < 200: rank = spark
+        elif start_level < 400: rank = wildfire
+        elif start_level < 600: rank = firestorm
+        elif start_level < 800: rank = hellblaze
+        elif start_level < 1000: rank = hellbringer
+        else: rank = phoenix
 
         if gained != 0:
             emoji = '' if gained > 0 else ''
@@ -87,11 +91,12 @@ def info(event_id=None):
             rank.append(f'**{name}**: {gained} {level_s} ({start_level} to {end_level}) {emoji}')
 
     embed = discord.Embed(title='Level Event Update', colour=0xffa32b)
+    embed.add_field(name=':fire: Spark :fire: - Two 1kk prizes for the first two people to level up 35 times', value=get_rank_info(spark), inline=False)
     embed.add_field(name=':fire: Wildfire :fire: - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire), inline=False)
     embed.add_field(name=':fire: Firestorm :fire: - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm), inline=False)
     embed.add_field(name=':fire: Hellblaze :fire: - Two 2.5kk prizes for the first two people to level up 25 times', value=get_rank_info(hellblaze), inline=False)
-    embed.add_field(name=':fire: Phoenix :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(phoenix), inline=False)
     embed.add_field(name=':fire: Hellbringer :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(hellbringer), inline=False)
+    embed.add_field(name=':fire: Phoenix :fire: - Two 3kk prizes for the first two people to level up 15 times', value=get_rank_info(phoenix), inline=False)
 
     lens = [len(f.value) for f in embed.fields]
     print(lens)
@@ -197,7 +202,9 @@ def rank_ups(event_id=None):
         name = char['name']
         start_level = char['start_level']
         end_level = char['end_level']
-        if start_level // 100 != end_level // 100 and start_level < 500:
+        rank_up_levels = [200, 300, 400, 600, 800, 1000]
+        if start_level // 100 != end_level // 100 and \
+            any(start_level < x and end_level >= x for x in rank_up_levels):
             rank_up_chars.append(f'**{name}**: {start_level} to {end_level}')
 
     if rank_up_chars:

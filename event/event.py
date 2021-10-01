@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import itertools
+import json
 import os
 import pathlib
 import requests
@@ -67,6 +68,8 @@ def get_data():
     world_json = requests.get(world_url).json()
     guild_json = requests.get(guild_url).json()
 
+    save_world(world_json)
+
     try:
         guild_members = guild_json['guild']['members'][:-2]
         guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
@@ -75,6 +78,14 @@ def get_data():
     world_chars = world_json['world'].get('players_online', [])
 
     return(guild_chars, world_chars)
+
+
+def save_world(world_json):
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    file_name = 'nefera-' + datetime.now().strftime('%Y-%m-%dT%H:%M:%S') + '.json'
+    json_file = pathlib.Path(script_path) / 'log' / 'nefera' / file_name
+    with json_file.open('w') as f:
+        f.write(json.dumps(world_json))
 
 
 if __name__ == '__main__':
