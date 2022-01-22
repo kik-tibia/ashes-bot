@@ -71,7 +71,7 @@ def get_data():
     save_world(world_json)
 
     try:
-        guild_members = guild_json['guild']['members'][:-2]
+        guild_members = guild_json['guild']['members']
         guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
     except:
         guild_chars = []

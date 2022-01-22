@@ -85,18 +85,17 @@ def info(event_id=None):
         else: rank = phoenix
 
         if gained != 0:
-            emoji = '' if gained > 0 else ''
-            # TODO mention if they ranked up
             level_s = 'level' if gained == 1 else 'levels'
-            rank.append(f'**{name}**: {gained} {level_s} ({start_level} to {end_level}) {emoji}')
+            rank.append(f'**{name}**: {gained} {level_s} ({start_level} to {end_level})')
 
+    prize_message = '1kk prize to each player in the top three at the end of the month'
     embed = discord.Embed(title='Level Event Update', colour=0xffa32b)
-    embed.add_field(name=':fire: Spark :fire: - Two 1kk prizes for the first two people to level up 35 times', value=get_rank_info(spark), inline=False)
-    embed.add_field(name=':fire: Wildfire :fire: - Two 2kk prizes for the first two people to level up 35 times', value=get_rank_info(wildfire), inline=False)
-    embed.add_field(name=':fire: Firestorm :fire: - Two 2kk prizes for the first two people to level up 30 times', value=get_rank_info(firestorm), inline=False)
-    embed.add_field(name=':fire: Hellblaze :fire: - Two 2.5kk prizes for the first two people to level up 25 times', value=get_rank_info(hellblaze), inline=False)
-    embed.add_field(name=':fire: Hellbringer :fire: - Two 3kk prizes for the first two people to level up 20 times', value=get_rank_info(hellbringer), inline=False)
-    embed.add_field(name=':fire: Phoenix :fire: - Two 3kk prizes for the first two people to level up 15 times', value=get_rank_info(phoenix), inline=False)
+    embed.add_field(name=f':fire: Spark :fire: - {prize_message}', value=get_rank_info(spark), inline=False)
+    embed.add_field(name=f':fire: Wildfire :fire: - {prize_message}', value=get_rank_info(wildfire), inline=False)
+    embed.add_field(name=f':fire: Firestorm :fire: - {prize_message}', value=get_rank_info(firestorm), inline=False)
+    embed.add_field(name=f':fire: Hellblaze :fire: - {prize_message}', value=get_rank_info(hellblaze), inline=False)
+    embed.add_field(name=f':fire: Hellbringer :fire: - {prize_message}', value=get_rank_info(hellbringer), inline=False)
+    embed.add_field(name=f':fire: Phoenix :fire: - {prize_message}', value=get_rank_info(phoenix), inline=False)
 
     lens = [len(f.value) for f in embed.fields]
     print(lens)
@@ -202,7 +201,7 @@ def rank_ups(event_id=None):
         name = char['name']
         start_level = char['start_level']
         end_level = char['end_level']
-        rank_up_levels = [200, 300, 400, 600, 800, 1000]
+        rank_up_levels = [200, 400, 600, 800, 1000]
         if start_level // 100 != end_level // 100 and \
             any(start_level < x and end_level >= x for x in rank_up_levels):
             rank_up_chars.append(f'**{name}**: {start_level} to {end_level}')
