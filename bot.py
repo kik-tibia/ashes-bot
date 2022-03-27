@@ -66,7 +66,7 @@ def info(event_id=None):
     sorted_char_data = sorted(char_data, key=lambda x: x['end_level'] - x['start_level'])
     sorted_char_data.reverse()
 
-    spark = []
+    flame = []
     wildfire = []
     firestorm = []
     hellblaze = []
@@ -77,7 +77,7 @@ def info(event_id=None):
         start_level = char['start_level']
         end_level = char['end_level']
         gained = end_level - start_level
-        if start_level < 200: rank = spark
+        if start_level < 200: rank = flame
         elif start_level < 400: rank = wildfire
         elif start_level < 600: rank = firestorm
         elif start_level < 800: rank = hellblaze
@@ -90,7 +90,7 @@ def info(event_id=None):
 
     prize_message = '1kk prize to each player in the top three at the end of the month'
     embed = discord.Embed(title='Level Event Update', colour=0xffa32b)
-    embed.add_field(name=f':fire: Spark :fire: - {prize_message}', value=get_rank_info(spark), inline=False)
+    embed.add_field(name=f':fire: Flame :fire: - {prize_message}', value=get_rank_info(flame), inline=False)
     embed.add_field(name=f':fire: Wildfire :fire: - {prize_message}', value=get_rank_info(wildfire), inline=False)
     embed.add_field(name=f':fire: Firestorm :fire: - {prize_message}', value=get_rank_info(firestorm), inline=False)
     embed.add_field(name=f':fire: Hellblaze :fire: - {prize_message}', value=get_rank_info(hellblaze), inline=False)
