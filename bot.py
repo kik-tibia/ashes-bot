@@ -249,17 +249,12 @@ async def new_joiner_loop():
 
 def update_files_and_get_new_joiner_message(remain_guild_chars, recharge_guild_chars):
     remain_guild_file = pathlib.Path(script_path) / 'remain-guild-members.dat'
-    recharge_guild_file = pathlib.Path(script_path) / 'recharge-guild-members.dat'
 
     remain_new_members = get_new_members_and_update_file(remain_guild_file, remain_guild_chars)
-    recharge_new_members = get_new_members_and_update_file(recharge_guild_file, recharge_guild_chars)
 
     messages = []
     for member in remain_new_members:
         messages.append(new_joiner_message(member, remain_guild_chars, 'Ashes Remain'))
-
-    for member in recharge_new_members:
-        messages.append(new_joiner_message(member, recharge_guild_chars, 'Ashes Recharge'))
 
     if messages:
         return discord.Embed(title='New members', colour=0xffa32b, description='\n'.join(messages))
@@ -289,12 +284,11 @@ def get_new_members_and_update_file(guild_file, guild_chars):
 
 
 async def get_data(guild_name):
-    guild_url = f'https://api.tibiadata.com/v2/guild/{guild_name}.json'
+    guild_url = f'https://api.tibiadata.com/v3/guild/{guild_name}'
 
     try:
         guild_json = requests.get(guild_url).json()
-        guild_members = guild_json['guild']['members'][2:]
-        guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
+        guild_chars = guild_json['guilds']['guild']['members']
     except:
         guild_chars = []
 

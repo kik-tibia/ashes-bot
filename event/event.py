@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import html
 import itertools
 import json
 import os
@@ -62,8 +63,8 @@ def enough_time(previous_time, current_time):
 
 
 def get_data():
-    world_url = 'https://api.tibiadata.com/v2/world/Nefera.json'
-    guild_url = 'https://api.tibiadata.com/v2/guild/Ashes+Remain.json'
+    world_url = 'https://api.tibiadata.com/v3/world/Nefera'
+    guild_url = 'https://api.tibiadata.com/v3/guild/Ashes+Remain'
 
     world_json = requests.get(world_url).json()
     guild_json = requests.get(guild_url).json()
@@ -71,13 +72,20 @@ def get_data():
     save_world(world_json)
 
     try:
-        guild_members = guild_json['guild']['members']
-        guild_chars = list(itertools.chain(*nested_lookup('characters', guild_members)))
+        guild_chars = guild_json['guilds']['guild']['members']
     except:
         guild_chars = []
-    world_chars = world_json['world'].get('players_online', [])
+    world_chars = world_json['worlds']['world'].get('online_players', [])
+
+    html_unescape(guild_chars)
+    html_unescape(world_chars)
 
     return(guild_chars, world_chars)
+
+
+def html_unescape(l):
+    for i in l:
+        i['name'] = html.unescape(i['name'])
 
 
 def save_world(world_json):
