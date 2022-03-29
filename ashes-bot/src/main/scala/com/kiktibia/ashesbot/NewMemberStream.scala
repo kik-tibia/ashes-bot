@@ -4,7 +4,7 @@ import akka.actor.Cancellable
 import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.scaladsl.{Flow, RunnableGraph, Sink, Source}
 import akka.stream.{Attributes, Supervision}
-import com.kiktibia.ashesbot.tibiadata.{GuildResponse, TibiaDataClient}
+import com.kiktibia.ashesbot.tibiadata.{GuildResponse, Member, TibiaDataClient}
 import com.kiktibia.ashesbot.util.FileUtils
 import com.typesafe.scalalogging.StrictLogging
 import net.dv8tion.jda.api.EmbedBuilder
@@ -31,21 +31,25 @@ class NewMemberStream(newMemberChannel: TextChannel) extends StrictLogging {
   }.withAttributes(logAndResume)
 
   private lazy val determineNewMembers = Flow[GuildResponse].mapAsync(1) { guildResponse =>
-    val namesFromTibiaData: Set[String] = guildResponse.guilds.guild.members.map(_.name).toSet
+    val members = guildResponse.guilds.guild.members
+    val namesFromTibiaData: Set[String] = members.map(_.name).toSet
     val namesFromFile: Set[String] = FileUtils.getMembers.toSet
     val newMembers: Set[String] = namesFromTibiaData -- namesFromFile
     logger.info(s"${newMembers.size} new members")
-    Future.successful(newMembers)
+    Future.successful((newMembers, members))
   }.withAttributes(logAndResume)
 
-  private lazy val writeNewMembersToFile = Flow[Set[String]].mapAsync(1) { newMembers =>
+  private lazy val writeNewMembersToFile = Flow[(Set[String], List[Member])].mapAsync(1) { case (newMembers, guildMembers) =>
     FileUtils.writeNewMembers(newMembers.toList)
-    Future.successful(newMembers)
+    Future.successful((newMembers, guildMembers))
   }.withAttributes(logAndResume)
 
-  private lazy val mentionNewMembersOnDiscord = Flow[Set[String]].mapAsync(1) { newMembers =>
+  private lazy val mentionNewMembersOnDiscord = Flow[(Set[String], List[Member])].mapAsync(1) { case (newMembers, guildMembers) =>
     if (newMembers.nonEmpty) {
-      val embed = new EmbedBuilder().setTitle("New members").setDescription(newMembers.mkString("\n")).setColor(16753451).build()
+      val newMemberMessages = newMembers.flatMap(m => guildMembers.find(_.name == m)).map {m =>
+        s"**${m.name}** (${m.level.toInt} ${m.vocation}) just joined Ashes Remain!"
+      }
+      val embed = new EmbedBuilder().setTitle("New members").setDescription(newMemberMessages.mkString("\n")).setColor(16753451).build()
       newMemberChannel.sendMessageEmbeds(embed).queue()
     }
     logger.info("Stream finished")

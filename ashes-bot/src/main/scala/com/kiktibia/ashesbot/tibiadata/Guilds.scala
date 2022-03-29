@@ -11,7 +11,7 @@ case class Member(
                    title: Option[String],
                    rank: String,
                    vocation: String,
-                   level: Double,
+                   level: Double, // TODO unmarshal straight to Int?
                    joined: String,
                    status: String
                  )
