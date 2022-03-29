@@ -1,10 +1,10 @@
 package com.kiktibia.ashesbot
 
 import akka.actor.ActorSystem
-import com.kiktibia.ashesbot.command.InfoCommand
+import com.kiktibia.ashesbot.command.EventCommand
 import com.typesafe.scalalogging.StrictLogging
 import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.entities.{Activity, Guild}
+import net.dv8tion.jda.api.entities.Guild
 
 object BotApp extends App with StrictLogging {
 
@@ -14,7 +14,6 @@ object BotApp extends App with StrictLogging {
 
   private val jda = JDABuilder.createDefault(Config.token)
     .addEventListeners(new BotListener())
-    .setActivity(Activity.playing("testing stuff"))
     .build()
 
   jda.awaitReady()
@@ -22,7 +21,7 @@ object BotApp extends App with StrictLogging {
 
   private val guild: Guild = jda.getGuildById(Config.guildId)
 
-  guild.updateCommands().addCommands(InfoCommand.command).complete()
+  guild.updateCommands().addCommands(EventCommand.command).complete()
 
   private val newMemberChannel = guild.getTextChannelById(Config.newMemberChannelId)
   private val newMemberStream = new NewMemberStream(newMemberChannel)

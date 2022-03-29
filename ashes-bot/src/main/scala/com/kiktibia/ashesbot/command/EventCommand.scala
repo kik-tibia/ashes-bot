@@ -13,14 +13,14 @@ import Rank.ranks
 
 import scala.jdk.CollectionConverters._
 
-object InfoCommand extends StrictLogging {
+object EventCommand extends StrictLogging {
 
-  val command: SlashCommandData = Commands.slash("info", "get info of event")
+  val command: SlashCommandData = Commands.slash("event", "get info of event")
     .addOptions(new OptionData(OptionType.STRING, "rank", "The rank to show")
       .addChoices(ranksAsChoices()))
 
   def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
-    logger.info("info command called")
+    logger.info("event command called")
     val requestedRank: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "rank").map(_.getAsString)
 
     val eventData: List[EventData] = FileUtils.getEventData(None)
