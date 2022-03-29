@@ -20,3 +20,4 @@ libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpV
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10"
 libraryDependencies += "net.dv8tion" % "JDA" % "5.0.0-alpha.9"
+libraryDependencies += "org.apache.commons" % "commons-text" % "1.9"

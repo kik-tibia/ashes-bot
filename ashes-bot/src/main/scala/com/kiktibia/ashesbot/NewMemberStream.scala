@@ -47,7 +47,7 @@ class NewMemberStream(newMemberChannel: TextChannel) extends StrictLogging {
   private lazy val mentionNewMembersOnDiscord = Flow[(Set[String], List[Member])].mapAsync(1) { case (newMembers, guildMembers) =>
     if (newMembers.nonEmpty) {
       val newMemberMessages = newMembers.flatMap(m => guildMembers.find(_.name == m)).map {m =>
-        s"**${m.name.replaceAll("&#39;", "'")}** (${m.level.toInt} ${m.vocation}) just joined Ashes Remain!" // TODO handle thesse HTML encodings in a better way
+        s"**${m.name}** (${m.level.toInt} ${m.vocation}) just joined Ashes Remain!"
       }
       val embed = new EmbedBuilder().setTitle("New members").setDescription(newMemberMessages.mkString("\n")).setColor(16753451).build()
       newMemberChannel.sendMessageEmbeds(embed).queue()
