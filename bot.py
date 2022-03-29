@@ -166,30 +166,6 @@ def get_rank_info(rank):
         return 'Nobody has gained any levels yet.'
 
 
-def winners(event_id=None):
-    level_data = get_level_data(event_id)
-
-    wildfire = []
-    firestorm = []
-    hellblaze = []
-    phoenix = []
-    hellbringer = []
-    for char in sorted_char_data:
-        name = char['name']
-        start_level = char['start_level']
-        end_level = char['end_level']
-        gained = end_level - start_level
-        if start_level < 300: rank = wildfire
-        elif start_level < 400: rank = firestorm
-        elif start_level < 500: rank = hellblaze
-        elif start_level < 700: rank = phoenix
-        else: rank = hellbringer
-
-
-def rank_winners(level_data, start_level, end_level, levels_needed):
-    pass
-
-
 def rank_ups(event_id=None):
     char_data = get_char_data(event_id)
 
