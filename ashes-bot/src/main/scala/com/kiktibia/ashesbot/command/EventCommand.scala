@@ -32,7 +32,7 @@ object EventCommand extends StrictLogging {
     }.map { case (rank, value) => (rank.name, value) }
 
     val embed = new EmbedBuilder()
-    embed.setTitle("Level event update")
+    embed.setTitle("Level event update").setColor(16753451)
     requestedRank match {
       case Some(rank) =>
         val rankMessages = groupedCharData.getOrElse(rank, List.empty).map(rankMessage)

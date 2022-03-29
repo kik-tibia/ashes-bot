@@ -6,6 +6,7 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val guildhallFormat: RootJsonFormat[Guildhall] = jsonFormat3(Guildhall)
   implicit val memberFormat: RootJsonFormat[Member] = jsonFormat7(Member)
+  implicit val inviteFormat: RootJsonFormat[Invite] = jsonFormat2(Invite)
   implicit val guildFormat: RootJsonFormat[Guild] = jsonFormat18(Guild)
   implicit val guildsFormat: RootJsonFormat[Guilds] = jsonFormat1(Guilds)
   implicit val informationFormat: RootJsonFormat[Information] = jsonFormat2(Information)

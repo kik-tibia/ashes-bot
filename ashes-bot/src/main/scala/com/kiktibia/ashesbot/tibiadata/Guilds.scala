@@ -16,6 +16,11 @@ case class Member(
                    status: String
                  )
 
+case class Invite(
+                    name: String,
+                    date: String
+                  )
+
 case class Guild(
                   name: String,
                   world: String,
@@ -34,7 +39,7 @@ case class Guild(
                   members_total: Double,
                   members_invited: Double,
                   members: List[Member],
-                  invites: Option[String]
+                  invites: List[Invite]
                 )
 
 case class Guilds(
