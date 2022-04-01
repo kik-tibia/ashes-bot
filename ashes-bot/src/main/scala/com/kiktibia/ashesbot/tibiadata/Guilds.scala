@@ -26,7 +26,7 @@ case class Guild(
                   world: String,
                   logo_url: Option[String],
                   description: Option[String],
-                  guildhalls: List[Guildhall],
+                  guildhalls: Option[List[Guildhall]],
                   active: Boolean,
                   founded: String,
                   open_applications: Boolean,
@@ -39,7 +39,7 @@ case class Guild(
                   members_total: Double,
                   members_invited: Double,
                   members: List[Member],
-                  invites: List[Invite]
+                  invites: Option[List[Invite]]
                 )
 
 case class Guilds(
