@@ -23,8 +23,8 @@ def main():
 
 
 def update_files(levels):
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    dat_files = [x for x in list(pathlib.Path(script_path).glob('*.dat'))]
+    data_path = pathlib.Path.home() / 'data' / 'ashes-bot' / 'event'
+    dat_files = [x for x in list(pathlib.Path(data_path).glob('*.dat'))]
     date_time = datetime.now().isoformat(' ', 'seconds')
 
     for dat_file in dat_files:
@@ -52,6 +52,7 @@ def get_level(guild_char, world_chars):
     if world_level: return world_level[0]
     else: return guild_level
 
+
 # so this doesn't work
 # need to somehow know how long they have been offline for before adding a guild level to the list
 def enough_time(previous_time, current_time):
@@ -64,15 +65,16 @@ def enough_time(previous_time, current_time):
 
 def get_data():
     world_url = 'https://api.tibiadata.com/v3/world/Nefera'
-    guild_url = 'https://api.tibiadata.com/v3/guild/Ashes+Remain'
+    guild_url = 'https://api.tibiadata.com/v3/guild/Ashes%20Remain'
 
     world_json = requests.get(world_url).json()
     guild_json = requests.get(guild_url).json()
 
-    save_world(world_json)
+    tracked_ranks = ['Incinerate', 'Phoenix', 'Hellbringer', 'Hellblaze', 'Firestorm', 'Wildfire', 'Flame']
 
     try:
-        guild_chars = guild_json['guilds']['guild']['members']
+        all_guild_chars = guild_json['guilds']['guild']['members']
+        guild_chars = [g for g in all_guild_chars if g['rank'] in tracked_ranks]
     except:
         guild_chars = []
     world_chars = world_json['worlds']['world'].get('online_players', [])
@@ -86,14 +88,6 @@ def get_data():
 def html_unescape(l):
     for i in l:
         i['name'] = html.unescape(i['name'])
-
-
-def save_world(world_json):
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    file_name = 'nefera-' + datetime.now().strftime('%Y-%m-%dT%H:%M:%S') + '.json'
-    json_file = pathlib.Path(script_path) / 'log' / 'nefera' / file_name
-    with json_file.open('w') as f:
-        f.write(json.dumps(world_json))
 
 
 if __name__ == '__main__':
