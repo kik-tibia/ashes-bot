@@ -1,10 +1,11 @@
 package com.kiktibia.ashesbot
 
 import akka.actor.ActorSystem
-import com.kiktibia.ashesbot.command.{EventCommand, RankupsCommand}
+import com.kiktibia.ashesbot.command.{EventCommand, RankupsCommand, WinnersCommand}
 import com.typesafe.scalalogging.StrictLogging
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Guild
+import scala.jdk.CollectionConverters._
 
 object BotApp extends App with StrictLogging {
 
@@ -24,8 +25,8 @@ object BotApp extends App with StrictLogging {
 //  guild.retrieveCommands().map { commands =>
 //    commands.forEach(c => guild.deleteCommandById(c.getId).queue())
 //  }.queue()
-  guild.updateCommands().addCommands(EventCommand.command).complete()
-  guild.updateCommands().addCommands(RankupsCommand.command).complete()
+  private val commands = List(EventCommand.command, WinnersCommand.command, RankupsCommand.command)
+  guild.updateCommands().addCommands(commands.asJava).complete()
 
   private val newMemberChannel = guild.getTextChannelById(Config.newMemberChannelId)
   private val newMemberStream = new NewMemberStream(newMemberChannel)
