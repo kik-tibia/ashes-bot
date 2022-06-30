@@ -1,16 +1,16 @@
 package com.kiktibia.ashesbot.domain
 
-case class Rank(name: String, minLevel: Option[Int], maxLevel: Option[Int])
+case class Rank(id: Int, name: String, minLevel: Option[Int], maxLevel: Option[Int])
 
 case object Rank {
 
   val ranks: List[Rank] = List(
-    Rank("Flame", None, Some(199)),
-    Rank("Wildfire", Some(200), Some(399)),
-    Rank("Firestorm", Some(400), Some(599)),
-    Rank("Hellblaze", Some(600), Some(799)),
-    Rank("Hellbringer", Some(800), Some(999)),
-    Rank("Phoenix", Some(1000), None),
+    Rank(1, "Flame", None, Some(199)),
+    Rank(2, "Wildfire", Some(200), Some(399)),
+    Rank(3, "Firestorm", Some(400), Some(599)),
+    Rank(4, "Hellblaze", Some(600), Some(799)),
+    Rank(5, "Hellbringer", Some(800), Some(999)),
+    Rank(6, "Phoenix", Some(1000), None),
   )
 
   def levelToRank(level: Int): Rank = {
