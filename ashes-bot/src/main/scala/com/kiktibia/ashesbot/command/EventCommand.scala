@@ -35,15 +35,28 @@ object EventCommand extends StrictLogging {
     embed.setTitle("Level event update").setColor(16753451)
     requestedRank match {
       case Some(rank) =>
-        val rankMessages = groupedCharData.getOrElse(rank, List.empty).map(rankMessage)
-        EmbedHelper.addMultiFields(embed, s":fire: $rank :fire:", rankMessages, false)
+        addRankFieldToEmbed(groupedCharData, embed, rank, None)
       case None =>
         ranks.map(_.name).foreach { rank =>
-          val rankMessages = groupedCharData.getOrElse(rank, List.empty).take(5).map(rankMessage)
-          EmbedHelper.addMultiFields(embed, s":fire: $rank :fire:", rankMessages, false)
+          addRankFieldToEmbed(groupedCharData, embed, rank, Some(5))
         }
     }
     embed.build()
+  }
+
+  private def addRankFieldToEmbed(groupedCharData: Map[String, List[CharData]], embed: EmbedBuilder, rank: String, limit: Option[Int]): Unit = {
+    val rankCharData = groupedCharData.getOrElse(rank, List.empty)
+    val rankMessages = limit match {
+      case Some(l) => rankCharData.take(l).map(rankMessage)
+      case None => rankCharData.map(rankMessage)
+    }
+
+    val fieldValue = rankMessages match {
+      case Nil => List("Nobody has gained any levels yet.")
+      case messages => messages
+    }
+
+    EmbedHelper.addMultiFields(embed, s":fire: $rank :fire:", fieldValue, false)
   }
 
   private def ranksAsChoices() = {
