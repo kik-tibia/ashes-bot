@@ -10,10 +10,10 @@ class BotListener extends ListenerAdapter {
     event.getName match {
       case "event" =>
         handleEvent(event)
-      case "rankups" =>
-        handleRankups(event)
       case "winners" =>
         handleWinners(event)
+      case "rankups" =>
+        handleRankups(event)
       case _ =>
     }
   }

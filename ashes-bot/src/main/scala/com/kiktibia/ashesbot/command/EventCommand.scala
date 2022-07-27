@@ -13,7 +13,7 @@ import Rank.ranks
 
 import scala.jdk.CollectionConverters._
 
-object EventCommand extends StrictLogging {
+object EventCommand extends StrictLogging with Command {
 
   val command: SlashCommandData = Commands.slash("event", "get info of event")
     .addOptions(new OptionData(OptionType.STRING, "rank", "The rank to show")
@@ -64,22 +64,6 @@ object EventCommand extends StrictLogging {
       new Choice(rank.name, rank.name)
     }
   }.asJava
-
-  private def eventDataToCharData(eventData: List[EventData]): List[CharData] = {
-    val reversedEventData = eventData.reverse
-    val charNames = eventData.map(_.name).toSet
-    charNames.map { name =>
-      val startLevel = eventData.filter(_.name == name).head.level
-      val endLevel = reversedEventData.filter(_.name == name).head.level
-      CharData(name, startLevel, endLevel, endLevel - startLevel)
-    }.toList
-  }
-
-  // sort char data by who gained the most levels, breaking ties by who is the highest level
-  private def charDataSort(c1: CharData, c2: CharData): Boolean = {
-    if (c1.gained == c2.gained) c1.startLevel > c2.startLevel
-    else c1.gained > c2.gained
-  }
 
   private def rankMessage(c: CharData): String = {
     val levels = if (c.gained == 1) "level" else "levels"
