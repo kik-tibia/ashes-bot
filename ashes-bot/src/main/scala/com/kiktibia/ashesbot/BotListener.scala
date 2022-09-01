@@ -24,12 +24,12 @@ class BotListener extends ListenerAdapter {
   }
 
   private def handleWinners(event: SlashCommandInteractionEvent): Unit = {
-    val embed = WinnersCommand.handleEvent()
+    val embed = WinnersCommand.handleEvent(event)
     event.replyEmbeds(embed).queue()
   }
 
   private def handleRankups(event: SlashCommandInteractionEvent): Unit = {
-    val embed = RankupsCommand.handleEvent()
+    val embed = RankupsCommand.handleEvent(event)
     event.replyEmbeds(embed).queue()
   }
 

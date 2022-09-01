@@ -21,7 +21,7 @@ object FileUtils {
     bw.close()
   }
 
-  def getEventData(idOpt: Option[Int]): List[EventData] = {
+  def getEventData(idOpt: Option[String]): List[EventData] = {
     val datFiles: List[File] = eventDir.listFiles().toList.filter(_.getName.contains(".dat"))
 
     val datFile = idOpt match {

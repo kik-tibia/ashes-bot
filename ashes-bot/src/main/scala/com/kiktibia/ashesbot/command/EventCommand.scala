@@ -1,5 +1,6 @@
 package com.kiktibia.ashesbot.command
 
+import com.kiktibia.ashesbot.domain.Rank.ranks
 import com.kiktibia.ashesbot.domain.{CharData, EventData, Rank}
 import com.kiktibia.ashesbot.util.{EmbedHelper, FileUtils}
 import com.typesafe.scalalogging.StrictLogging
@@ -9,7 +10,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.Command.Choice
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.{Commands, OptionData, SlashCommandData}
-import Rank.ranks
 
 import scala.jdk.CollectionConverters._
 
@@ -24,15 +24,15 @@ object EventCommand extends StrictLogging with Command {
     val requestedRank: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "rank").map(_.getAsString)
 
     val eventData: List[EventData] = FileUtils.getEventData(None)
-
-    val charData = eventDataToCharData(eventData).filter(_.gained > 0).sortWith(charDataSort)
+    val charData = eventDataToCharData(eventData)
+    val month = getMonth(eventData)
 
     val groupedCharData = charData.groupBy { c =>
       Rank.levelToRank(c.startLevel)
     }.map { case (rank, value) => (rank.name, value) }
 
     val embed = new EmbedBuilder()
-    embed.setTitle("Level event update").setColor(16753451)
+    embed.setTitle(s"$month Level event update").setColor(16753451)
     requestedRank match {
       case Some(rank) =>
         addRankFieldToEmbed(groupedCharData, embed, rank, None)
@@ -43,6 +43,8 @@ object EventCommand extends StrictLogging with Command {
     }
     embed.build()
   }
+
+
 
   private def addRankFieldToEmbed(groupedCharData: Map[String, List[CharData]], embed: EmbedBuilder, rank: String, limit: Option[Int]): Unit = {
     val rankCharData = groupedCharData.getOrElse(rank, List.empty)
