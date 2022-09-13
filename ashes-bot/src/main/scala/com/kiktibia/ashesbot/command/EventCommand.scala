@@ -22,7 +22,10 @@ class EventCommand(override val fileUtils: FileUtils) extends StrictLogging with
   override def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
     logger.info("event command called")
     val requestedRank: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "rank").map(_.getAsString)
+    buildEmbed(requestedRank)
+  }
 
+  def buildEmbed(requestedRank: Option[String]): MessageEmbed = {
     val eventData: List[EventData] = fileUtils.getEventData(None)
     val charData = eventDataToCharData(eventData)
     val month = getMonth(eventData)
@@ -43,7 +46,6 @@ class EventCommand(override val fileUtils: FileUtils) extends StrictLogging with
     }
     embed.build()
   }
-
 
   private def addRankFieldToEmbed(groupedCharData: Map[String, List[CharData]], embed: EmbedBuilder, rank: String, limit: Option[Int]): Unit = {
     val rankCharData = groupedCharData.getOrElse(rank, List.empty)

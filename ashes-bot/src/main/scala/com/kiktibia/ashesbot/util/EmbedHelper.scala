@@ -21,6 +21,6 @@ object EmbedHelper extends StrictLogging {
       }
     }
     embed.addField(name, field, inline)
-    logger.info(s"Embed length: ${embed.length()}")
   }
+
 }
