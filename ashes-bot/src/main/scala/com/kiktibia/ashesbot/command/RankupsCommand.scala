@@ -11,17 +11,17 @@ import net.dv8tion.jda.api.interactions.commands.build.{Commands, OptionData, Sl
 
 import scala.jdk.CollectionConverters._
 
-object RankupsCommand extends StrictLogging with Command {
+class RankupsCommand(override val fileUtils: FileUtils) extends StrictLogging with Command {
 
-  val command: SlashCommandData = Commands.slash("rankups", "get a list of characters that have advanced to the next rank")
+  override val command: SlashCommandData = Commands.slash("rankups", "get a list of characters that have advanced to the next rank")
     .addOptions(new OptionData(OptionType.STRING, "event-id", "The id of the event to query"))
 
-  def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
+  override def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
     logger.info("rankups command called")
 
     val requestedId: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "event-id").map(_.getAsString)
 
-    val eventData: List[EventData] = FileUtils.getEventData(requestedId)
+    val eventData: List[EventData] = fileUtils.getEventData(requestedId)
     val charData = eventDataToCharData(eventData)
     val month = getMonth(eventData)
 
@@ -33,7 +33,7 @@ object RankupsCommand extends StrictLogging with Command {
     }
 
     val embed = new EmbedBuilder()
-    embed.setTitle(s"$month Level event rankups").setColor(16753451)
+    embed.setTitle(s"$month Level event rankups").setColor(embedColour)
 
     EmbedHelper.addMultiFields(embed, "Rankups", rankupMessages, false)
 

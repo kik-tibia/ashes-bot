@@ -6,22 +6,30 @@ import com.kiktibia.ashesbot.domain.EventData
 import java.io.{BufferedWriter, File, FileWriter}
 import scala.io.Source
 
-object FileUtils {
+trait FileUtils {
+  def getMembers: List[String]
+
+  def writeNewMembers(members: List[String])
+
+  def getEventData(idOpt: Option[String]): List[EventData]
+}
+
+class FileUtilsImpl extends FileUtils {
 
   private val membersFile = new File(s"${Config.dataDir}/members/ashes-remain.dat")
   private val eventDir = new File(s"${Config.dataDir}/event")
 
-  def getMembers: List[String] = {
+  override def getMembers: List[String] = {
     getLines(membersFile)
   }
 
-  def writeNewMembers(members: List[String]): Unit = {
+  override def writeNewMembers(members: List[String]): Unit = {
     val bw = new BufferedWriter(new FileWriter(membersFile, true))
     members.foreach(m => bw.write(s"$m\n"))
     bw.close()
   }
 
-  def getEventData(idOpt: Option[String]): List[EventData] = {
+  override def getEventData(idOpt: Option[String]): List[EventData] = {
     val datFiles: List[File] = eventDir.listFiles().toList.filter(_.getName.contains(".dat"))
 
     val datFile = idOpt match {

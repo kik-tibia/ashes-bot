@@ -1,11 +1,23 @@
 package com.kiktibia.ashesbot.command
 
 import com.kiktibia.ashesbot.domain.{CharData, EventData}
+import com.kiktibia.ashesbot.util.FileUtils
+import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 
 import java.time.format.TextStyle
 import java.util.Locale
 
 trait Command {
+
+  val fileUtils: FileUtils
+
+  val command: SlashCommandData
+
+  val embedColour = 16753451
+
+  def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed
 
   def getMonth(eventData: List[EventData]) = {
     eventData.head.date.getMonth.getDisplayName(TextStyle.FULL, Locale.UK)

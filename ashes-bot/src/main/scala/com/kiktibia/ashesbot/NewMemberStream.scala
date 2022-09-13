@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.entities.TextChannel
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class NewMemberStream(newMemberChannel: TextChannel) extends StrictLogging {
+class NewMemberStream(newMemberChannel: TextChannel, fileUtils: FileUtils) extends StrictLogging {
 
   private val tibiaDataClient = new TibiaDataClient()
 
@@ -33,14 +33,14 @@ class NewMemberStream(newMemberChannel: TextChannel) extends StrictLogging {
   private lazy val determineNewMembers = Flow[GuildResponse].mapAsync(1) { guildResponse =>
     val members = guildResponse.guilds.guild.members
     val namesFromTibiaData: Set[String] = members.map(_.name).toSet
-    val namesFromFile: Set[String] = FileUtils.getMembers.toSet
+    val namesFromFile: Set[String] = fileUtils.getMembers.toSet
     val newMembers: Set[String] = namesFromTibiaData -- namesFromFile
     logger.info(s"${newMembers.size} new members")
     Future.successful((newMembers, members))
   }.withAttributes(logAndResume)
 
   private lazy val writeNewMembersToFile = Flow[(Set[String], List[Member])].mapAsync(1) { case (newMembers, guildMembers) =>
-    FileUtils.writeNewMembers(newMembers.toList)
+    fileUtils.writeNewMembers(newMembers.toList)
     Future.successful((newMembers, guildMembers))
   }.withAttributes(logAndResume)
 

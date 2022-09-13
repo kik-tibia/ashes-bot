@@ -13,17 +13,17 @@ import net.dv8tion.jda.api.interactions.commands.build.{Commands, OptionData, Sl
 
 import scala.jdk.CollectionConverters._
 
-object EventCommand extends StrictLogging with Command {
+class EventCommand(override val fileUtils: FileUtils) extends StrictLogging with Command {
 
-  val command: SlashCommandData = Commands.slash("event", "get info of event")
+  override val command: SlashCommandData = Commands.slash("event", "get info of event")
     .addOptions(new OptionData(OptionType.STRING, "rank", "The rank to show")
       .addChoices(ranksAsChoices()))
 
-  def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
+  override def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
     logger.info("event command called")
     val requestedRank: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "rank").map(_.getAsString)
 
-    val eventData: List[EventData] = FileUtils.getEventData(None)
+    val eventData: List[EventData] = fileUtils.getEventData(None)
     val charData = eventDataToCharData(eventData)
     val month = getMonth(eventData)
 
@@ -32,7 +32,7 @@ object EventCommand extends StrictLogging with Command {
     }.map { case (rank, value) => (rank.name, value) }
 
     val embed = new EmbedBuilder()
-    embed.setTitle(s"$month Level event update").setColor(16753451)
+    embed.setTitle(s"$month Level event update").setColor(embedColour)
     requestedRank match {
       case Some(rank) =>
         addRankFieldToEmbed(groupedCharData, embed, rank, None)
@@ -43,7 +43,6 @@ object EventCommand extends StrictLogging with Command {
     }
     embed.build()
   }
-
 
 
   private def addRankFieldToEmbed(groupedCharData: Map[String, List[CharData]], embed: EmbedBuilder, rank: String, limit: Option[Int]): Unit = {

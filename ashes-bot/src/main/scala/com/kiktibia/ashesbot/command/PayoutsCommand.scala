@@ -12,17 +12,17 @@ import net.dv8tion.jda.api.interactions.commands.build.{Commands, OptionData, Sl
 
 import scala.jdk.CollectionConverters._
 
-object PayoutsCommand extends StrictLogging with Command {
+class PayoutsCommand(override val fileUtils: FileUtils) extends StrictLogging with Command {
 
-  val command: SlashCommandData = Commands.slash("payouts", "get payouts of event")
+  override val command: SlashCommandData = Commands.slash("payouts", "get payouts of event")
     .addOptions(new OptionData(OptionType.STRING, "event-id", "The id of the event to query"))
 
-  def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
+  override def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
     logger.info("payouts command called")
 
     val requestedId: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "event-id").map(_.getAsString)
 
-    val eventData: List[EventData] = FileUtils.getEventData(requestedId)
+    val eventData: List[EventData] = fileUtils.getEventData(requestedId)
     val charData = eventDataToCharData(eventData)
     val month = getMonth(eventData)
 
@@ -31,7 +31,7 @@ object PayoutsCommand extends StrictLogging with Command {
     }.map { case (rank, value) => (rank.name, value) }
 
     val embed = new EmbedBuilder()
-    embed.setTitle(s"$month Level event payouts").setColor(16753451)
+    embed.setTitle(s"$month Level event payouts").setColor(embedColour)
 
     val prizeMessages = ranks.map(_.name).flatMap { rank =>
       val scores = groupedCharData.getOrElse(rank, List.empty)
