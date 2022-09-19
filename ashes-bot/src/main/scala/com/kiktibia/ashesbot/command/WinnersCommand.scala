@@ -19,9 +19,11 @@ class WinnersCommand(override val fileUtils: FileUtils) extends StrictLogging wi
 
   override def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
     logger.info("winners command called")
-
     val requestedId: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "event-id").map(_.getAsString)
+    buildEmbed(requestedId)
+  }
 
+  def buildEmbed(requestedId: Option[String]) = {
     val eventData: List[EventData] = fileUtils.getEventData(requestedId)
     val charData = eventDataToCharData(eventData)
     val month = getMonth(eventData)
@@ -34,23 +36,18 @@ class WinnersCommand(override val fileUtils: FileUtils) extends StrictLogging wi
     embed.setTitle(s"$month Level event winners").setColor(embedColour)
 
     ranks.map(_.name).foreach { rank =>
-      val scores = groupedCharData.getOrElse(rank, List.empty)
-      val top3 = scores.take(3)
-      val winners = top3 ++ scores.drop(3).takeWhile(_.gained == top3.last.gained)
-      val winnersWithIndex = winners.zipWithIndex
-
-      val prizeMessages = winners.map { winner =>
-        val tiedWith = winnersWithIndex.filter(_._1.gained == winner.gained)
-        val numTiedWith = tiedWith.length
-        val numPrizesToShare = tiedWith.count(_._2 <= 2)
-        val prizeMoney = 1000 * numPrizesToShare / numTiedWith
-        val prizeString = if (prizeMoney == 1000) "1kk" else s"${prizeMoney}k"
-        s"**${winner.name}**: ${winner.gained} levels, $prizeString"
+      val prizeMessages = calculatePrizes(groupedCharData, rank).map { winner =>
+        s"**${winner.name}**: ${winner.gained} levels, ${prizeToK(winner.prize)}"
       }
       EmbedHelper.addMultiFields(embed, s":fire: $rank winners :fire:", prizeMessages, false)
     }
 
     embed.build()
   }
+
+  // TODO round kk to 3 d.p.
+  private def prizeToK(prize: Int): String =
+    if (prize >= 1000000) s"${prize / 1000000}kk"
+    else s"${prize / 1000}k"
 
 }

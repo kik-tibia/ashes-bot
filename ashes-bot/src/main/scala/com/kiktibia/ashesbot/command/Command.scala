@@ -39,4 +39,21 @@ trait Command {
     else c1.gained > c2.gained
   }
 
+  def calculatePrizes(groupedCharData: Map[String, List[CharData]], rank: String): List[PrizeWinner] = {
+    val scores = groupedCharData.getOrElse(rank, List.empty)
+    val top3 = scores.take(3)
+    val winners = top3 ++ scores.drop(3).takeWhile(_.gained == top3.last.gained)
+    val payoutsWithIndex = winners.zipWithIndex
+
+    winners.map { winner =>
+      val tiedWith = payoutsWithIndex.filter(_._1.gained == winner.gained)
+      val numTiedWith = tiedWith.length
+      val numPrizesToShare = tiedWith.count(_._2 <= 2)
+      val prizeMoney = 1000000 * numPrizesToShare / numTiedWith
+      PrizeWinner(winner.name, winner.gained, prizeMoney)
+    }
+  }
+
 }
+
+case class PrizeWinner(name: String, gained: Int, prize: Int)
