@@ -64,7 +64,13 @@ class EventCommand(override val fileUtils: FileUtils) extends StrictLogging with
 
   private def ranksAsChoices() = {
     Rank.ranks.map { rank =>
-      new Choice(rank.name, rank.name)
+      val levelRange = (rank.minLevel, rank.maxLevel) match {
+        case (Some(min), Some(max)) => s"($min to $max)"
+        case (None, Some(max)) => s"(0 to $max)"
+        case (Some(min), None) => s"($min+)"
+        case _ => ""
+      }
+      new Choice(s"${rank.name} $levelRange", rank.name)
     }
   }.asJava
 
