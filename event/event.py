@@ -64,8 +64,8 @@ def enough_time(previous_time, current_time):
 
 
 def get_data():
-    world_url = 'https://api.tibiadata.com/v3/world/Nefera'
-    guild_url = 'https://api.tibiadata.com/v3/guild/Ashes%20Remain'
+    world_url = 'https://api.tibiadata.com/v4/world/Nefera'
+    guild_url = 'https://api.tibiadata.com/v4/guild/Ashes%20Remain'
 
     world_json = requests.get(world_url).json()
     guild_json = requests.get(guild_url).json()
@@ -73,11 +73,11 @@ def get_data():
     tracked_ranks = ['Incinerate', 'Phoenix', 'Hellbringer', 'Hellblaze', 'Firestorm', 'Wildfire', 'Flame']
 
     try:
-        all_guild_chars = guild_json['guilds']['guild']['members']
+        all_guild_chars = guild_json['guild']['members']
         guild_chars = [g for g in all_guild_chars if g['rank'] in tracked_ranks]
     except:
         guild_chars = []
-    world_chars = world_json['worlds']['world'].get('online_players', [])
+    world_chars = world_json['world'].get('online_players', [])
 
     html_unescape(guild_chars)
     html_unescape(world_chars)

@@ -31,7 +31,7 @@ class NewMemberStream(newMemberChannel: TextChannel, fileUtils: FileUtils) exten
   }.withAttributes(logAndResume)
 
   private lazy val determineNewMembers = Flow[GuildResponse].mapAsync(1) { guildResponse =>
-    val members = guildResponse.guilds.guild.members
+    val members = guildResponse.guild.members
     val namesFromTibiaData: Set[String] = members.map(_.name).toSet
     val namesFromFile: Set[String] = fileUtils.getMembers.toSet
     val newMembers: Set[String] = namesFromTibiaData -- namesFromFile
@@ -39,27 +39,26 @@ class NewMemberStream(newMemberChannel: TextChannel, fileUtils: FileUtils) exten
     Future.successful((newMembers, members))
   }.withAttributes(logAndResume)
 
-  private lazy val writeNewMembersToFile = Flow[(Set[String], List[Member])].mapAsync(1) { case (newMembers, guildMembers) =>
-    fileUtils.writeNewMembers(newMembers.toList)
-    Future.successful((newMembers, guildMembers))
-  }.withAttributes(logAndResume)
+  private lazy val writeNewMembersToFile = Flow[(Set[String], List[Member])]
+    .mapAsync(1) { case (newMembers, guildMembers) =>
+      fileUtils.writeNewMembers(newMembers.toList)
+      Future.successful((newMembers, guildMembers))
+    }.withAttributes(logAndResume)
 
-  private lazy val mentionNewMembersOnDiscord = Flow[(Set[String], List[Member])].mapAsync(1) { case (newMembers, guildMembers) =>
-    if (newMembers.nonEmpty) {
-      val newMemberMessages = newMembers.flatMap(m => guildMembers.find(_.name == m)).map {m =>
-        s"**${m.name}** (${m.level.toInt} ${m.vocation}) just joined Ashes Remain!"
+  private lazy val mentionNewMembersOnDiscord = Flow[(Set[String], List[Member])]
+    .mapAsync(1) { case (newMembers, guildMembers) =>
+      if (newMembers.nonEmpty) {
+        val newMemberMessages = newMembers.flatMap(m => guildMembers.find(_.name == m)).map { m =>
+          s"**${m.name}** (${m.level.toInt} ${m.vocation}) just joined Ashes Remain!"
+        }
+        val embed = new EmbedBuilder().setTitle("New members").setDescription(newMemberMessages.mkString("\n"))
+          .setColor(16753451).build()
+        newMemberChannel.sendMessageEmbeds(embed).queue()
       }
-      val embed = new EmbedBuilder().setTitle("New members").setDescription(newMemberMessages.mkString("\n")).setColor(16753451).build()
-      newMemberChannel.sendMessageEmbeds(embed).queue()
-    }
-    logger.info("Stream finished")
-    Future.successful()
-  }.withAttributes(logAndResume)
+      logger.info("Stream finished")
+      Future.successful()
+    }.withAttributes(logAndResume)
 
-  lazy val stream: RunnableGraph[Cancellable] =
-    sourceTick via
-      getGuildFromTibiaData via
-      determineNewMembers via
-      writeNewMembersToFile via
-      mentionNewMembersOnDiscord to Sink.ignore
+  lazy val stream: RunnableGraph[Cancellable] = sourceTick via getGuildFromTibiaData via determineNewMembers via
+    writeNewMembersToFile via mentionNewMembersOnDiscord to Sink.ignore
 }

@@ -24,9 +24,7 @@ object BotApp extends App with StrictLogging {
   private val commands = List(eventCommand, payoutsCommand, rankupsCommand, winnersCommand)
 
   private val botListener = new BotListener(commands)
-  private val jda = JDABuilder.createDefault(Config.token)
-    .addEventListeners(botListener)
-    .build()
+  private val jda = JDABuilder.createDefault(Config.token).addEventListeners(botListener).build()
 
   jda.awaitReady()
   logger.info("JDA ready")

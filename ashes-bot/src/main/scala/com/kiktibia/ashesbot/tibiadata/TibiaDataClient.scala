@@ -15,7 +15,7 @@ class TibiaDataClient extends JsonSupport with StrictLogging {
   implicit private val system: ActorSystem = ActorSystem()
   implicit private val executionContext: ExecutionContextExecutor = system.dispatcher
 
-  private val guildUrl = "https://api.tibiadata.com/v3/guild/Ashes%20Remain"
+  private val guildUrl = "https://api.tibiadata.com/v4/guild/Ashes%20Remain"
 
   def getGuild: Future[GuildResponse] = {
     for {
@@ -27,12 +27,9 @@ class TibiaDataClient extends JsonSupport with StrictLogging {
 
   private def decodeResponse(response: HttpResponse): HttpResponse = {
     val decoder = response.encoding match {
-      case HttpEncodings.gzip =>
-        Coders.Gzip
-      case HttpEncodings.deflate =>
-        Coders.Deflate
-      case HttpEncodings.identity =>
-        Coders.NoCoding
+      case HttpEncodings.gzip => Coders.Gzip
+      case HttpEncodings.deflate => Coders.Deflate
+      case HttpEncodings.identity => Coders.NoCoding
       case other =>
         logger.warn(s"Unknown encoding [$other], not decoding")
         Coders.NoCoding

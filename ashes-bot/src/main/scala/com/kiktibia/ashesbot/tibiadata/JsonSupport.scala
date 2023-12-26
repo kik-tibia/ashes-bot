@@ -9,15 +9,17 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val strFormat: RootJsonFormat[String] = new RootJsonFormat[String] {
     override def write(obj: String): JsValue = new JsString(obj)
 
-    override def read(json: JsValue): String = StringEscapeUtils.unescapeHtml4(JsonConvertNoCustomImplicits.convert(json))
+    override def read(json: JsValue): String = StringEscapeUtils
+      .unescapeHtml4(JsonConvertNoCustomImplicits.convert(json))
   }
 
   implicit val guildhallFormat: RootJsonFormat[Guildhall] = jsonFormat3(Guildhall)
   implicit val memberFormat: RootJsonFormat[Member] = jsonFormat7(Member)
   implicit val inviteFormat: RootJsonFormat[Invite] = jsonFormat2(Invite)
   implicit val guildFormat: RootJsonFormat[Guild] = jsonFormat18(Guild)
-  implicit val guildsFormat: RootJsonFormat[Guilds] = jsonFormat1(Guilds)
-  implicit val informationFormat: RootJsonFormat[Information] = jsonFormat2(Information)
+  implicit val apiFormat: RootJsonFormat[Api] = jsonFormat3(Api)
+  implicit val statusFormat: RootJsonFormat[Status] = jsonFormat1(Status)
+  implicit val informationFormat: RootJsonFormat[Information] = jsonFormat3(Information)
   implicit val guildResponseFormat: RootJsonFormat[GuildResponse] = jsonFormat2(GuildResponse)
 }
 
