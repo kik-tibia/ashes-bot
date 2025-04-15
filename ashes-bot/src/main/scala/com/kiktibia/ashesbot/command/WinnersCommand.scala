@@ -19,18 +19,22 @@ class WinnersCommand(override val fileUtils: FileUtils) extends StrictLogging wi
 
   override def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
     logger.info("winners command called")
-    val requestedId: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "event-id").map(_.getAsString)
+    val requestedId: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "event-id")
+      .map(_.getAsString)
     buildEmbed(requestedId)
   }
 
   def buildEmbed(requestedId: Option[String]) = {
-    val eventData: List[EventData] = fileUtils.getEventData(requestedId)
+    val eventData: List[EventData] = requestedId match {
+      case None => fileUtils.getPreviousEventData()
+      case _ => fileUtils.getEventData(requestedId)
+    }
     val charData = eventDataToCharData(eventData)
     val month = getMonth(eventData)
 
-    val groupedCharData = charData.groupBy { c =>
-      Rank.levelToRank(c.startLevel)
-    }.map { case (rank, value) => (rank.name, value) }
+    val groupedCharData = charData.groupBy { c => Rank.levelToRank(c.startLevel) }.map { case (rank, value) =>
+      (rank.name, value)
+    }
 
     val embed = new EmbedBuilder()
     embed.setTitle(s"$month Level event winners").setColor(embedColour)
@@ -46,8 +50,6 @@ class WinnersCommand(override val fileUtils: FileUtils) extends StrictLogging wi
   }
 
   // TODO round kk to 3 d.p.
-  private def prizeToK(prize: Int): String =
-    if (prize >= 1000000) s"${prize / 1000000}kk"
-    else s"${prize / 1000}k"
+  private def prizeToK(prize: Int): String = if (prize >= 1000000) s"${prize / 1000000}kk" else s"${prize / 1000}k"
 
 }

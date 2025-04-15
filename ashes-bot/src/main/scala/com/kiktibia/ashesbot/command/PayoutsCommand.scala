@@ -20,15 +20,19 @@ class PayoutsCommand(override val fileUtils: FileUtils) extends StrictLogging wi
   override def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
     logger.info("payouts command called")
 
-    val requestedId: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "event-id").map(_.getAsString)
+    val requestedId: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "event-id")
+      .map(_.getAsString)
 
-    val eventData: List[EventData] = fileUtils.getEventData(requestedId)
+    val eventData: List[EventData] = requestedId match {
+      case None => fileUtils.getPreviousEventData()
+      case _ => fileUtils.getEventData(requestedId)
+    }
     val charData = eventDataToCharData(eventData)
     val month = getMonth(eventData)
 
-    val groupedCharData = charData.groupBy { c =>
-      Rank.levelToRank(c.startLevel)
-    }.map { case (rank, value) => (rank.name, value) }
+    val groupedCharData = charData.groupBy { c => Rank.levelToRank(c.startLevel) }.map { case (rank, value) =>
+      (rank.name, value)
+    }
 
     val embed = new EmbedBuilder()
     embed.setTitle(s"$month Level event payouts").setColor(embedColour)

@@ -19,9 +19,7 @@ trait Command {
 
   def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed
 
-  def getMonth(eventData: List[EventData]) = {
-    eventData.head.date.getMonth.getDisplayName(TextStyle.FULL, Locale.UK)
-  }
+  def getMonth(eventData: List[EventData]) = eventData.head.date.getMonth.getDisplayName(TextStyle.FULL, Locale.UK)
 
   def eventDataToCharData(eventData: List[EventData]): List[CharData] = {
     val reversedEventData = eventData.reverse
@@ -35,21 +33,26 @@ trait Command {
 
   // sort char data by who gained the most levels, breaking ties by who is the highest level
   private def charDataSort(c1: CharData, c2: CharData): Boolean = {
-    if (c1.gained == c2.gained) c1.startLevel > c2.startLevel
-    else c1.gained > c2.gained
+    if (c1.gained == c2.gained) c1.startLevel > c2.startLevel else c1.gained > c2.gained
   }
 
   def calculatePrizes(groupedCharData: Map[String, List[CharData]], rank: String): List[PrizeWinner] = {
-    val scores = groupedCharData.getOrElse(rank, List.empty)
-    val top3 = scores.take(3)
-    val winners = top3 ++ scores.drop(3).takeWhile(_.gained == top3.last.gained)
-    val payoutsWithIndex = winners.zipWithIndex
+    val prizeDistribution = List(1000000, 750000)
 
-    winners.map { winner =>
-      val tiedWith = payoutsWithIndex.filter(_._1.gained == winner.gained)
-      val numTiedWith = tiedWith.length
-      val numPrizesToShare = tiedWith.count(_._2 <= 2)
-      val prizeMoney = 1000000 * numPrizesToShare / numTiedWith
+    val numWinners = prizeDistribution.length
+    val scores = groupedCharData.getOrElse(rank, List.empty).filterNot { charData =>
+      rank == "Flame" && charData.gained < 5
+    }
+    val topN = scores.take(numWinners)
+    val winners = topN ++ scores.drop(numWinners).takeWhile(_.gained == topN.last.gained)
+    val winnersWithIndex = winners.zipWithIndex
+
+    winnersWithIndex.map { case (winner, i) =>
+      val tiedWith = winnersWithIndex.filter(_._1.gained == winner.gained)
+      val winnerWithTies = tiedWith.map(_._2)
+      val totalPrizeMoneyToShare = winnerWithTies.flatMap(prizeDistribution.lift)
+      val prizeMoney = totalPrizeMoneyToShare.sum / tiedWith.length
+
       PrizeWinner(winner.name, winner.gained, prizeMoney)
     }
   }

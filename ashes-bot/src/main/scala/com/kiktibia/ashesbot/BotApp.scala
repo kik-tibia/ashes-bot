@@ -1,12 +1,18 @@
 package com.kiktibia.ashesbot
 
 import akka.actor.ActorSystem
-import com.kiktibia.ashesbot.command.{EventCommand, PayoutsCommand, RankupsCommand, WinnersCommand}
+import com.kiktibia.ashesbot.command.EventCommand
+import com.kiktibia.ashesbot.command.PayoutsCommand
+import com.kiktibia.ashesbot.command.RankupsCommand
+import com.kiktibia.ashesbot.command.WinnersCommand
 import com.kiktibia.ashesbot.util.FileUtilsImpl
 import com.typesafe.scalalogging.StrictLogging
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters._
 
 object BotApp extends App with StrictLogging {
@@ -31,11 +37,15 @@ object BotApp extends App with StrictLogging {
 
   private val guild: Guild = jda.getGuildById(Config.guildId)
 
-  guild.updateCommands().addCommands(commands.map(_.command).asJava).complete()
+  List(jda.updateCommands()).map(updateCommands)
+  private def updateCommands(c: CommandListUpdateAction): Unit = {
+    c.addCommands(commands.map(_.command).asJava).complete()
+  }
 
   private val newMemberChannel = guild.getTextChannelById(Config.newMemberChannelId)
 
   private val newMemberStream = new NewMemberStream(newMemberChannel, fileUtils)
   newMemberStream.stream.run()
 
+  Await.result(actorSystem.whenTerminated, Duration.Inf)
 }

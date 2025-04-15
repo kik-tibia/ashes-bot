@@ -13,23 +13,27 @@ import scala.jdk.CollectionConverters._
 
 class RankupsCommand(override val fileUtils: FileUtils) extends StrictLogging with Command {
 
-  override val command: SlashCommandData = Commands.slash("rankups", "get a list of characters that have advanced to the next rank")
+  override val command: SlashCommandData = Commands
+    .slash("rankups", "get a list of characters that have advanced to the next rank")
     .addOptions(new OptionData(OptionType.STRING, "event-id", "The id of the event to query"))
 
   override def handleEvent(event: SlashCommandInteractionEvent): MessageEmbed = {
     logger.info("rankups command called")
 
-    val requestedId: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "event-id").map(_.getAsString)
+    val requestedId: Option[String] = event.getInteraction.getOptions.asScala.find(_.getName == "event-id")
+      .map(_.getAsString)
 
-    val eventData: List[EventData] = fileUtils.getEventData(requestedId)
+    val eventData: List[EventData] = requestedId match {
+      case None => fileUtils.getPreviousEventData()
+      case _ => fileUtils.getEventData(requestedId)
+    }
     val charData = eventDataToCharData(eventData)
     val month = getMonth(eventData)
 
     val rankupMessages = charData.flatMap { c =>
       val startRank = Rank.levelToRank(c.startLevel).id
       val endRank = Rank.levelToRank(c.endLevel).id
-      if (startRank != endRank) Some(s"**${c.name}**: ${c.startLevel} to ${c.endLevel}")
-      else None
+      if (startRank != endRank) Some(s"**${c.name}**: ${c.startLevel} to ${c.endLevel}") else None
     }
 
     val embed = new EmbedBuilder()

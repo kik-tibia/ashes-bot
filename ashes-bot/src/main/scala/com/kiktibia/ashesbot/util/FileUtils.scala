@@ -12,6 +12,8 @@ trait FileUtils {
   def writeNewMembers(members: List[String])
 
   def getEventData(idOpt: Option[String]): List[EventData]
+
+  def getPreviousEventData(): List[EventData]
 }
 
 class FileUtilsImpl extends FileUtils {
@@ -38,12 +40,20 @@ class FileUtilsImpl extends FileUtils {
       // id not provided -> find the latest file
       case None => datFiles.filter(_.getName.contains(".dat")).maxByOption(_.getName.split("\\.").head.toInt)
     }
+    eventDataForfile(datFile)
+  }
 
+  override def getPreviousEventData(): List[EventData] = {
+    val datFiles: List[File] = eventDir.listFiles().toList.filter(_.getName.contains(".dat"))
+    val datFile = datFiles.filter(_.getName.contains(".dat")).sortBy(fi => - fi.getName.split("\\.").head.toInt).lift(1)
+    eventDataForfile(datFile)
+  }
+
+  private def eventDataForfile(datFile: Option[File]): List[EventData] = {
     datFile match {
       case Some(file) => getLines(file).map(EventData.fromString)
-      case None => List.empty // TODO handle some other way?
+      case None => List.empty
     }
-
   }
 
   private def getLines(file: File): List[String] = {

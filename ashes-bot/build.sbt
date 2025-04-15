@@ -1,11 +1,8 @@
-ThisBuild / version := "1.2.0"
+ThisBuild / version := "1.3.0"
 
 ThisBuild / scalaVersion := "2.13.9"
 
-lazy val root = (project in file("."))
-  .settings(
-    name := "ashes-bot"
-  )
+lazy val root = (project in file(".")).settings(name := "ashes-bot")
 
 enablePlugins(DockerPlugin)
 enablePlugins(JavaAppPackaging)
