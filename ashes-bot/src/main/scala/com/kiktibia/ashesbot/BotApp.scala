@@ -45,7 +45,7 @@ object BotApp extends App with StrictLogging {
   private val newMemberChannel = guild.getTextChannelById(Config.newMemberChannelId)
 
   private val newMemberStream = new NewMemberStream(newMemberChannel, fileUtils)
-  newMemberStream.stream.run()
+  // newMemberStream.stream.run()
 
   Await.result(actorSystem.whenTerminated, Duration.Inf)
 }
