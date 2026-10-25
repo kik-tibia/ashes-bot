@@ -64,11 +64,15 @@ def enough_time(previous_time, current_time):
 
 
 def get_data():
-    world_url = 'https://api.tibiadata.com/v4/world/Nefera'
-    guild_url = 'https://api.tibiadata.com/v4/guild/Ashes%20Remain'
+    world_url = 'https://api.tibiadata.com/v5/world/Nefera'
+    guild_url = 'https://api.tibiadata.com/v5/guild/Ashes%20Remain'
 
-    world_json = requests.get(world_url).json()
-    guild_json = requests.get(guild_url).json()
+    world_response = requests.get(world_url)
+    world_response.raise_for_status()
+    world_json = world_response.json()
+    guild_response = requests.get(guild_url)
+    guild_response.raise_for_status()
+    guild_json = guild_response.json()
 
     tracked_ranks = ['Incinerate', 'Phoenix', 'Hellbringer', 'Hellblaze', 'Firestorm', 'Wildfire', 'Flame']
 
