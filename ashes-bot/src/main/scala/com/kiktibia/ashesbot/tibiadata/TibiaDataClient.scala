@@ -15,11 +15,15 @@ class TibiaDataClient extends JsonSupport with StrictLogging {
   implicit private val system: ActorSystem = ActorSystem()
   implicit private val executionContext: ExecutionContextExecutor = system.dispatcher
 
-  private val guildUrl = "https://api.tibiadata.com/v4/guild/Ashes%20Remain"
+  private val guildUrl = "https://api.tibiadata.com/v5/guild/Ashes%20Remain"
 
   def getGuild: Future[GuildResponse] = {
     for {
       response <- Http().singleRequest(HttpRequest(uri = guildUrl))
+      _ <- if (response.status.isSuccess()) Future.successful(()) else {
+        response.discardEntityBytes()
+        Future.failed(new RuntimeException(s"TibiaData request failed with HTTP ${response.status}"))
+      }
       decoded = decodeResponse(response)
       unmarshalled <- Unmarshal(decoded).to[GuildResponse]
     } yield unmarshalled
